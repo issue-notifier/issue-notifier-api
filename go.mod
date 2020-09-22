@@ -1,4 +1,4 @@
-module github.com/hemakshis/issue-notifier-api.git
+module github.com/hemakshis/issue-notifier-api
 
 go 1.15
 

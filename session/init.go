@@ -1,0 +1,39 @@
+package session
+
+import (
+	"encoding/gob"
+
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
+)
+
+// Store will hold all session data
+var Store *sessions.CookieStore // TODO: Move to token based authentication in future
+// CookieName cookie key which will be used to get the session from store
+var CookieName string = "cookie-name"
+
+// UserSession data type
+type UserSession struct {
+	Username        string `json:"username"`
+	AccessToken     string `json:"accessToken"`
+	IsAuthenticated bool   `json:"isAuthenticated"`
+}
+
+// Init session store
+func Init() {
+	authKey := securecookie.GenerateRandomKey(64)
+	encryptionKey := securecookie.GenerateRandomKey(32)
+
+	Store = sessions.NewCookieStore(
+		authKey,
+		encryptionKey,
+	)
+
+	Store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   60 * 60 * 15,
+		HttpOnly: true,
+	}
+
+	gob.Register(UserSession{})
+}
