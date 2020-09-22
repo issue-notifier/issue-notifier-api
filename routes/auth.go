@@ -100,8 +100,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 func getAccessToken(code string) (string, error) {
 	reqBody, _ := json.Marshal(map[string]string{
-		"client_id":     "69c3fc731ccb2d116412",                     // TODO: Move to env vars
-		"client_secret": "df34a3cadf00452757713d71404eef86731af668", // TODO: Move to env vars
+		"client_id":     GITHUB_CLIENT_ID,
+		"client_secret": GITHUB_CLIENT_SECRET,
 		"code":          code,
 	})
 

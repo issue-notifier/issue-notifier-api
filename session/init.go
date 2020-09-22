@@ -3,14 +3,15 @@ package session
 import (
 	"encoding/gob"
 
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
 
-// Store will hold all session data
-var Store *sessions.CookieStore // TODO: Move to token based authentication in future
-// CookieName cookie key which will be used to get the session from store
-var CookieName string = "cookie-name"
+var (
+	// Store will hold all session data
+	Store *sessions.CookieStore // TODO: Move to token based authentication in future
+	// CookieName cookie key which will be used to get the session from store
+	CookieName string = "cookie-name"
+)
 
 // UserSession data type
 type UserSession struct {
@@ -20,13 +21,9 @@ type UserSession struct {
 }
 
 // Init session store
-func Init() {
-	authKey := securecookie.GenerateRandomKey(64)
-	encryptionKey := securecookie.GenerateRandomKey(32)
-
+func Init(sessionAuthKey string) {
 	Store = sessions.NewCookieStore(
-		authKey,
-		encryptionKey,
+		[]byte(sessionAuthKey),
 	)
 
 	Store.Options = &sessions.Options{

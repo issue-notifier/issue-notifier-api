@@ -15,14 +15,22 @@ var (
 	authRouter   *mux.Router
 )
 
+var (
+	GITHUB_CLIENT_ID     string
+	GITHUB_CLIENT_SECRET string
+)
+
 // Init all types of routes
-func Init() {
+func Init(githubClientId, githubClientSecret string) {
+	GITHUB_CLIENT_ID = githubClientId
+	GITHUB_CLIENT_SECRET = githubClientSecret
+
 	Router = mux.NewRouter()
 	noAuthRouter = Router.PathPrefix("/api/v1").Subrouter()
 	authRouter = noAuthRouter.PathPrefix("/user").Subrouter()
 	authRouter.Use(middleware.IsAuthenticated)
 
-	Router.HandleFunc("/health", healthCheck).Methods("GET")
+	Router.HandleFunc("/health", health).Methods("GET")
 
 	// matches /api/v1/...
 	noAuthRouter.HandleFunc("/login/github/oauth2", GitHubLogin).Methods("GET")
@@ -32,7 +40,7 @@ func Init() {
 	authRouter.HandleFunc("/logout", Logout).Methods("GET")
 }
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
+func health(w http.ResponseWriter, r *http.Request) {
 	response, _ := json.Marshal(map[string]string{
 		"status": "UP",
 	})
