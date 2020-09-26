@@ -2,16 +2,18 @@ package routes
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 
+	"github.com/hemakshis/issue-notifier-api/models"
 	"github.com/hemakshis/issue-notifier-api/session"
 	"github.com/hemakshis/issue-notifier-api/utils"
 )
 
-type User struct {
+type UserInfo struct {
 	Name      string `json:"name"`
 	Username  string `json:"username"`
 	Email     string `json:"email"`
@@ -23,20 +25,19 @@ func GetAuthenticatedUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		userSession, _ := ses.Values["UserSession"].(session.UserSession)
-
-		accessToken := userSession.AccessToken
-		user, err := getUser(accessToken)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-		} else {
-			response := utils.CreateResponse(true, "", user)
-
-			utils.RespondWithJSON(w, http.StatusOK, response)
-		}
-
+		return
 	}
+
+	userSession, _ := ses.Values["UserSession"].(session.UserSession)
+	accessToken := userSession.AccessToken
+	userInfo, err := getUserInfo(accessToken)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, userInfo)
 }
 
 func GitHubLogin(w http.ResponseWriter, r *http.Request) {
@@ -44,36 +45,50 @@ func GitHubLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		code := r.URL.Query()["code"][0]
-
-		accessToken, err := getAccessToken(code)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-		} else {
-			user, err := getUser(accessToken)
-
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnauthorized)
-			} else {
-				userSession := &session.UserSession{
-					Username:        user.Username,
-					AccessToken:     accessToken,
-					IsAuthenticated: true,
-				}
-
-				response := utils.CreateResponse(true, "", user)
-
-				// Set user as authenticated
-				ses.Values["UserSession"] = userSession
-				ses.Save(r, w)
-
-				utils.RespondWithJSON(w, http.StatusOK, response)
-			}
-		}
+		return
 	}
 
+	code := r.URL.Query()["code"][0]
+	accessToken, err := getAccessToken(code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userInfo, err := getUserInfo(accessToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userSession := &session.UserSession{
+		AccessToken:     accessToken,
+		IsAuthenticated: true,
+	}
+
+	var userID string
+	userID, err = models.GetUserIDByUsername(userInfo.Username)
+
+	// If no users found with the given username, create the user in DB
+	if err == sql.ErrNoRows {
+		userID, err = models.CreateUser(userInfo.Username, userInfo.Email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// If no other error returned then save session and respond back
+	userSession.UserID = userID
+
+	// Set user as authenticated
+	ses.Values["UserSession"] = userSession
+	ses.Save(r, w)
+
+	utils.RespondWithJSON(w, http.StatusOK, userInfo)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -81,21 +96,18 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		ses.Values["UserSession"] = session.UserSession{}
-		ses.Options.MaxAge = -1
-
-		err = ses.Save(r, w)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		response := utils.CreateResponse(true, "", nil)
-
-		utils.RespondWithJSON(w, http.StatusOK, response)
 	}
 
+	ses.Values["UserSession"] = session.UserSession{}
+	ses.Options.MaxAge = -1
+
+	err = ses.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, "Success")
 }
 
 func getAccessToken(code string) (string, error) {
@@ -127,7 +139,7 @@ func getAccessToken(code string) (string, error) {
 	return "", err
 }
 
-func getUser(accessToken string) (*User, error) {
+func getUserInfo(accessToken string) (*UserInfo, error) {
 
 	httpClient := &http.Client{}
 	req, _ := http.NewRequest("GET", "https://api.github.com/user?access_token="+accessToken, nil)
@@ -140,19 +152,19 @@ func getUser(accessToken string) (*User, error) {
 	} else {
 		defer res.Body.Close()
 
-		data, _ := ioutil.ReadAll(res.Body)
+		dataBytes, _ := ioutil.ReadAll(res.Body)
 
-		var userInfo map[string]interface{}
-		json.Unmarshal(data, &userInfo)
+		var data map[string]interface{}
+		json.Unmarshal(dataBytes, &data)
 
-		user := &User{
-			Name:      userInfo["name"].(string),
-			Username:  userInfo["login"].(string),
-			Email:     userInfo["email"].(string),
-			AvatarImg: userInfo["avatar_url"].(string),
+		userInfo := &UserInfo{
+			Name:      data["name"].(string),
+			Username:  data["login"].(string),
+			Email:     data["email"].(string),
+			AvatarImg: data["avatar_url"].(string),
 		}
 
-		return user, nil
+		return userInfo, nil
 	}
 
 	return nil, err

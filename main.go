@@ -40,6 +40,7 @@ func main() {
 	GITHUB_CLIENT_SECRET = os.Getenv("GITHUB_CLIENT_SECRET")
 
 	database.Init(DB_USER, DB_PASS, DB_NAME)
+	defer database.DB.Close()
 
 	routes.Init(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
 

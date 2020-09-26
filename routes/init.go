@@ -21,8 +21,8 @@ var (
 )
 
 // Init all types of routes
-func Init(githubClientId, githubClientSecret string) {
-	GITHUB_CLIENT_ID = githubClientId
+func Init(githubClientID, githubClientSecret string) {
+	GITHUB_CLIENT_ID = githubClientID
 	GITHUB_CLIENT_SECRET = githubClientSecret
 
 	Router = mux.NewRouter()
@@ -38,6 +38,8 @@ func Init(githubClientId, githubClientSecret string) {
 	// matches /api/v1/user/...
 	authRouter.HandleFunc("/authenticated", GetAuthenticatedUser).Methods("GET")
 	authRouter.HandleFunc("/logout", Logout).Methods("GET")
+	authRouter.HandleFunc("/subscription/add", CreateSubscription).Methods("POST")
+	authRouter.HandleFunc("/subscription/{org}/{repo}/labels", GetSubscribedLabelsByUserIDAndRepoID).Methods("GET")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

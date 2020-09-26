@@ -15,7 +15,7 @@ var (
 
 // UserSession data type
 type UserSession struct {
-	Username        string `json:"username"`
+	UserID          string `json:"userID"`
 	AccessToken     string `json:"accessToken"`
 	IsAuthenticated bool   `json:"isAuthenticated"`
 }
