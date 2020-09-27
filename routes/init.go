@@ -40,6 +40,8 @@ func Init(githubClientID, githubClientSecret string) {
 	authRouter.HandleFunc("/logout", Logout).Methods("GET")
 	authRouter.HandleFunc("/subscription/add", CreateSubscription).Methods("POST")
 	authRouter.HandleFunc("/subscription/{org}/{repo}/labels", GetSubscribedLabelsByUserIDAndRepoID).Methods("GET")
+	authRouter.HandleFunc("/subscription/view", GetSubscriptionsByUserID).Methods("GET")
+	authRouter.HandleFunc("/subscription/remove", RemoveSubscription).Methods("PUT")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
