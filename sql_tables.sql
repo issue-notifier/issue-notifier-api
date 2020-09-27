@@ -24,5 +24,4 @@ create table user_subscription(
     CONSTRAINT fk_repo_id
       FOREIGN KEY(repo_id) 
 	  REFERENCES global_repository(repo_id)
-
 );
