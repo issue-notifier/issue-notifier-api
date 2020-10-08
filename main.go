@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hemakshis/issue-notifier-api/database"
-	"github.com/hemakshis/issue-notifier-api/routes"
-	"github.com/hemakshis/issue-notifier-api/session"
+	"github.com/issue-notifier/issue-notifier-api/database"
+	"github.com/issue-notifier/issue-notifier-api/routes"
+	"github.com/issue-notifier/issue-notifier-api/session"
 	"github.com/joho/godotenv"
 )
 

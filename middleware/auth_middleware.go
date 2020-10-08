@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/hemakshis/issue-notifier-api/session"
+	"github.com/issue-notifier/issue-notifier-api/session"
 )
 
 func IsAuthenticated(next http.Handler) http.Handler {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/hemakshis/issue-notifier-api/database"
+	"github.com/issue-notifier/issue-notifier-api/database"
 )
 
 type User struct {

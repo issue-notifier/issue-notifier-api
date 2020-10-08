@@ -8,9 +8,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hemakshis/issue-notifier-api/models"
-	"github.com/hemakshis/issue-notifier-api/session"
-	"github.com/hemakshis/issue-notifier-api/utils"
+	"github.com/issue-notifier/issue-notifier-api/models"
+	"github.com/issue-notifier/issue-notifier-api/session"
+	"github.com/issue-notifier/issue-notifier-api/utils"
 )
 
 type UserInfo struct {

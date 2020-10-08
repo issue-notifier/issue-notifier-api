@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/hemakshis/issue-notifier-api/middleware"
+	"github.com/issue-notifier/issue-notifier-api/middleware"
 )
 
 // Router main Gorilla mux router of app
@@ -38,10 +38,11 @@ func Init(githubClientID, githubClientSecret string) {
 	// matches /api/v1/user/...
 	authRouter.HandleFunc("/authenticated", GetAuthenticatedUser).Methods("GET")
 	authRouter.HandleFunc("/logout", Logout).Methods("GET")
-	authRouter.HandleFunc("/subscription/add", CreateSubscription).Methods("POST")
+	authRouter.HandleFunc("/subscription/add", CreateSubscriptions).Methods("POST")
 	authRouter.HandleFunc("/subscription/{org}/{repo}/labels", GetSubscribedLabelsByUserIDAndRepoID).Methods("GET")
 	authRouter.HandleFunc("/subscription/view", GetSubscriptionsByUserID).Methods("GET")
-	authRouter.HandleFunc("/subscription/remove", RemoveSubscription).Methods("PUT")
+	authRouter.HandleFunc("/subscription/update", UpdateSubscriptions).Methods("PUT")
+	authRouter.HandleFunc("/subscription/remove", RemoveSubscriptions).Methods("DELETE")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
