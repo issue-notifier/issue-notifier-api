@@ -174,7 +174,11 @@ func RemoveSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Check and remove repository from GLOBAL_REPOSITORY table if no other user subscribes to it
+	err = models.DeleteRepositoriesWithNoLabels()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	utils.RespondWithJSON(w, http.StatusOK, "Remove Success")
 }
