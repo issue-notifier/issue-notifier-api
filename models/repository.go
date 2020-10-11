@@ -88,3 +88,14 @@ func CreateRepository(repoName string) (string, error) {
 
 	return repoID.String(), err
 }
+
+func DeleteRepositoriesWithNoLabels(repoName string) error {
+	sqlQuery := "DELETE FROM GLOBAL_REPOSITORY WHERE REPO_ID NOT IN (SELECT USER_SUBSCRIPTION.REPO_ID FROM USER_SUBSCRIPTION)"
+
+	_, err := database.DB.Exec(sqlQuery)
+	if err != nil {
+		return err
+	}
+
+	return err
+}

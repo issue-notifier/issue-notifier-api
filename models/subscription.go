@@ -97,5 +97,13 @@ func RemoveSubscriptions(userID, repoID string, labels Labels) error {
 		}
 	}
 
+	// Clean up subscriptions with no labels
+	sqlQuery := "DELETE FROM USER_SUBSCRIPTION WHERE JSONB_ARRAY_LENGTH(LABELS) = 0"
+
+	_, err := database.DB.Exec(sqlQuery)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
