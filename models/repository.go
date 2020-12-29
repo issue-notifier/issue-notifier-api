@@ -5,13 +5,16 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/issue-notifier/issue-notifier-api/database"
 )
 
 type Repository struct {
-	RepoName string `json:"repoName" db:"repo_name"`
+	RepoID             uuid.UUID `json:"repoID" db:"repo_id"`
+	RepoName           string    `json:"repoName" db:"repo_name"`
+	LastEventFetchedAt time.Time `json:"lastEventFetchedAt" db:"last_event_fetched_at"`
 }
 
 type Label struct {
@@ -37,7 +40,7 @@ func (a *Labels) Scan(value interface{}) error {
 }
 
 func GetAllRepositories() ([]Repository, error) {
-	sqlQuery := `SELECT REPO_NAME FROM GLOBAL_REPOSITORY`
+	sqlQuery := `SELECT * FROM GLOBAL_REPOSITORY`
 
 	rows, err := database.DB.Query(sqlQuery)
 
@@ -48,19 +51,21 @@ func GetAllRepositories() ([]Repository, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var d Repository
+		var repoID uuid.UUID
 		var repoName string
-		if err := rows.Scan(&repoName); err != nil {
+		var lastEventFetchedAt time.Time
+		if err := rows.Scan(&repoID, &repoName, &lastEventFetchedAt); err != nil {
 			return nil, err
 		}
 
-		d.RepoName = repoName
-
-		data = append(data, d)
+		data = append(data, Repository{
+			RepoID:             repoID,
+			RepoName:           repoName,
+			LastEventFetchedAt: lastEventFetchedAt,
+		})
 	}
 
 	return data, nil
-
 }
 
 func GetRepositoryIDByName(repoName string) (string, error) {

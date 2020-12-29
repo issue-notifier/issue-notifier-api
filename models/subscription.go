@@ -30,19 +30,46 @@ func GetSubscriptionsByUserID(userID string) ([]map[string]interface{}, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var d map[string]interface{}
 		var repoName string
 		var labels Labels
 		if err := rows.Scan(&repoName, &labels); err != nil {
 			return nil, err
 		}
 
-		d = map[string]interface{}{
+		data = append(data, map[string]interface{}{
 			"repoName": repoName,
 			"labels":   labels,
+		})
+	}
+
+	return data, nil
+}
+
+func GetSubscriptionsByRepoID(repoID string) ([]map[string]interface{}, error) {
+	sqlQuery := `SELECT USER_ID, LABELS.NAME
+		FROM USER_SUBSCRIPTION, JSONB_TO_RECORDSET(USER_SUBSCRIPTION.LABELS) 
+		AS LABELS(NAME TEXT, COLOR TEXT) 
+		WHERE REPO_ID=$1`
+
+	rows, err := database.DB.Query(sqlQuery, repoID)
+
+	var data []map[string]interface{}
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var label string
+		var userID uuid.UUID
+		if err := rows.Scan(&userID, &label); err != nil {
+			return nil, err
 		}
 
-		data = append(data, d)
+		data = append(data, map[string]interface{}{
+			"userId": userID,
+			"label":  label,
+		})
 	}
 
 	return data, nil

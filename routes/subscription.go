@@ -34,7 +34,22 @@ func GetSubscriptionsByUserID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GetSubscribedLabelsByUserIDAndRepoID(w http.ResponseWriter, r *http.Request) {
+func GetSubscriptionsByRepoID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	repoID := vars["repoID"]
+
+	var data []map[string]interface{}
+
+	data, err := models.GetSubscriptionsByRepoID(repoID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, data)
+}
+
+func GetSubscribedLabelsByUserIDAndRepoName(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(w, r)
 
 	vars := mux.Vars(r)
@@ -42,7 +57,7 @@ func GetSubscribedLabelsByUserIDAndRepoID(w http.ResponseWriter, r *http.Request
 
 	var labels models.Labels
 
-	// TODO: Convert this into one single DB call using JOINS
+	// TODO: Convert this into one single DB call using JOINTS
 	repoID, err := models.GetRepositoryIDByName(repoName)
 	// If no repository found with the given name return an empty response
 	if err == sql.ErrNoRows {

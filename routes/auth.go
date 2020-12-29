@@ -14,10 +14,11 @@ import (
 )
 
 type UserInfo struct {
-	Name      string `json:"name"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	AvatarImg string `json:"avatarImg"`
+	Name        string `json:"name"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	AvatarImg   string `json:"avatarImg"`
+	AccessToken string `json:"accessToken"`
 }
 
 func GetAuthenticatedUser(w http.ResponseWriter, r *http.Request) {
@@ -140,7 +141,6 @@ func getAccessToken(code string) (string, error) {
 }
 
 func getUserInfo(accessToken string) (*UserInfo, error) {
-
 	httpClient := &http.Client{}
 	req, _ := http.NewRequest("GET", "https://api.github.com/user?access_token="+accessToken, nil)
 	// req.Header.Set("Authorization", accessToken) // FIXME: See why this is not working
@@ -158,10 +158,11 @@ func getUserInfo(accessToken string) (*UserInfo, error) {
 		json.Unmarshal(dataBytes, &data)
 
 		userInfo := &UserInfo{
-			Name:      data["name"].(string),
-			Username:  data["login"].(string),
-			Email:     data["email"].(string),
-			AvatarImg: data["avatar_url"].(string),
+			Name:        data["name"].(string),
+			Username:    data["login"].(string),
+			Email:       data["email"].(string),
+			AvatarImg:   data["avatar_url"].(string),
+			AccessToken: accessToken,
 		}
 
 		return userInfo, nil

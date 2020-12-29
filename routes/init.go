@@ -34,15 +34,17 @@ func Init(githubClientID, githubClientSecret string) {
 
 	// matches /api/v1/...
 	noAuthRouter.HandleFunc("/login/github/oauth2", GitHubLogin).Methods("GET")
+	noAuthRouter.HandleFunc("/repositories", GetAllRepositories).Methods("GET")
+	noAuthRouter.HandleFunc("/subscription/{repoID}/view", GetSubscriptionsByRepoID).Methods("GET")
 
 	// matches /api/v1/user/...
 	authRouter.HandleFunc("/authenticated", GetAuthenticatedUser).Methods("GET")
 	authRouter.HandleFunc("/logout", Logout).Methods("GET")
 	authRouter.HandleFunc("/subscription/add", CreateSubscriptions).Methods("POST")
-	authRouter.HandleFunc("/subscription/{org}/{repo}/labels", GetSubscribedLabelsByUserIDAndRepoID).Methods("GET")
 	authRouter.HandleFunc("/subscription/view", GetSubscriptionsByUserID).Methods("GET")
 	authRouter.HandleFunc("/subscription/update", UpdateSubscriptions).Methods("PUT")
 	authRouter.HandleFunc("/subscription/remove", RemoveSubscriptions).Methods("DELETE")
+	authRouter.HandleFunc("/subscription/{org}/{repo}/labels", GetSubscribedLabelsByUserIDAndRepoName).Methods("GET")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
