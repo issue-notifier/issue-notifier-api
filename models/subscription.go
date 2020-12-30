@@ -2,18 +2,10 @@ package models
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/issue-notifier/issue-notifier-api/database"
 )
-
-type SubscriptionModel struct {
-	RepoID               uuid.UUID `json:"repoID" db:"repo_id"`
-	UserID               uuid.UUID `json:"userID" db:"user_id"`
-	Label                string    `json:"label" db:"label"`
-	LastNotificationSent time.Time `json:"lastNotificationSent" db:"last_notification_sent"`
-}
 
 func GetSubscriptionsByUserID(userID string) ([]map[string]interface{}, error) {
 	sqlQuery := `SELECT DISTINCT GLOBAL_REPOSITORY.REPO_NAME, USER_SUBSCRIPTION.LABELS 

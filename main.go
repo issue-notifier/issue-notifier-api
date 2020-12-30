@@ -48,3 +48,5 @@ func main() {
 
 	log.Fatal(http.ListenAndServe(PORT, routes.Router))
 }
+
+// TODOs MAJOR: Tests, Logs, Error logging

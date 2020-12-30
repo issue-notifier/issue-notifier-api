@@ -35,6 +35,7 @@ func Init(githubClientID, githubClientSecret string) {
 	// matches /api/v1/...
 	noAuthRouter.HandleFunc("/login/github/oauth2", GitHubLogin).Methods("GET")
 	noAuthRouter.HandleFunc("/repositories", GetAllRepositories).Methods("GET")
+	noAuthRouter.HandleFunc("/repository/{repoID}/update/lastEventAt", UpdateLastEventAtByRepoID).Methods("PUT")
 	noAuthRouter.HandleFunc("/subscription/{repoID}/view", GetSubscriptionsByRepoID).Methods("GET")
 
 	// matches /api/v1/user/...

@@ -17,9 +17,6 @@ type Subscription struct {
 	Labels   models.Labels `json:"labels"`
 }
 
-type LabelsByRepo map[string][]string
-type VisitedRepositories map[string]bool
-
 func GetSubscriptionsByUserID(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(w, r)
 
@@ -31,7 +28,6 @@ func GetSubscriptionsByUserID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, subscriptions)
-
 }
 
 func GetSubscriptionsByRepoID(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +134,7 @@ func UpdateSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Make it more efficient if possible
 	// Check if the new labels already exist or not in the database
+	// Or create a map and resave the same label and don't throw any error
 	for _, existingLabel := range existingLabels {
 		for _, newLabel := range subscription.Labels {
 			if existingLabel.Name == newLabel.Name {

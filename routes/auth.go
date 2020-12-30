@@ -142,8 +142,8 @@ func getAccessToken(code string) (string, error) {
 
 func getUserInfo(accessToken string) (*UserInfo, error) {
 	httpClient := &http.Client{}
-	req, _ := http.NewRequest("GET", "https://api.github.com/user?access_token="+accessToken, nil)
-	// req.Header.Set("Authorization", accessToken) // FIXME: See why this is not working
+	req, _ := http.NewRequest("GET", "https://api.github.com/user", nil)
+	req.Header.Set("Authorization", "token "+accessToken)
 
 	res, err := httpClient.Do(req)
 
