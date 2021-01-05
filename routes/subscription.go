@@ -62,7 +62,7 @@ func GetSubscribedLabelsByUserIDAndRepoName(w http.ResponseWriter, r *http.Reque
 	}
 
 	labels, err = models.GetSubscribedLabelsByUserIDAndRepoID(userID, repoID)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

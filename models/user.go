@@ -9,13 +9,9 @@ import (
 )
 
 type User struct {
-	ID       uuid.UUID `json:"userID" db:"user_id"`
+	UserID   uuid.UUID `json:"userID" db:"user_id"`
 	Username string    `json:"username" db:"username"`
 	Email    string    `json:"email" db:"email"`
-}
-
-func GetUserById(userID uuid.UUID) {
-
 }
 
 func GetUserIDByUsername(username string) (string, error) {
