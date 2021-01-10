@@ -3,18 +3,23 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
+	"github.com/issue-notifier/issue-notifier-api/utils"
+
+	// Postgres driver for sql
 	_ "github.com/lib/pq"
 )
 
+// DB to initialize postgres database
 var DB *sql.DB
 
+// Init initializes postgres database
 func Init(dbUser, dbPass, dbName string) {
 	connectionString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", dbUser, dbPass, dbName)
 	var err error
 	DB, err = sql.Open("postgres", connectionString)
 	if err != nil {
-		log.Fatal(err)
+		utils.LogError.Fatalln("Failed to connect to the database. Error:", err)
 	}
+	utils.LogInfo.Println("Successfully connected to the database")
 }

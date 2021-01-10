@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/issue-notifier/issue-notifier-api/middleware"
+	"github.com/issue-notifier/issue-notifier-api/utils"
+
+	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Router main Gorilla mux router of app
@@ -15,22 +18,27 @@ var (
 	authRouter   *mux.Router
 )
 
+// Github credentials
 var (
-	GITHUB_CLIENT_ID     string
-	GITHUB_CLIENT_SECRET string
+	GithubClientID     string
+	GithubClientSecret string
 )
 
-// Init all types of routes
+// Init initializes all types of routes
 func Init(githubClientID, githubClientSecret string) {
-	GITHUB_CLIENT_ID = githubClientID
-	GITHUB_CLIENT_SECRET = githubClientSecret
+	GithubClientID = githubClientID
+	GithubClientSecret = githubClientSecret
 
 	Router = mux.NewRouter()
+	Router.Use(middleware.LogHTTPRequest)
 	noAuthRouter = Router.PathPrefix("/api/v1").Subrouter()
 	authRouter = noAuthRouter.PathPrefix("/user").Subrouter()
 	authRouter.Use(middleware.IsAuthenticated)
 
+	// matches /health
 	Router.HandleFunc("/health", health).Methods("GET")
+
+	noAuthRouter.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	// matches /api/v1/...
 	noAuthRouter.HandleFunc("/login/github/oauth2", GitHubLogin).Methods("GET")
@@ -46,6 +54,8 @@ func Init(githubClientID, githubClientSecret string) {
 	authRouter.HandleFunc("/subscription/update", UpdateSubscriptions).Methods("PUT")
 	authRouter.HandleFunc("/subscription/remove", RemoveSubscriptions).Methods("DELETE")
 	authRouter.HandleFunc("/subscription/{org}/{repo}/labels", GetSubscribedLabelsByUserIDAndRepoName).Methods("GET")
+
+	utils.LogInfo.Println("Successfully initialized routes")
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// RespondWithJSON utitlity function to convert HTTP response data to JSON
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	res, _ := json.Marshal(payload)
 

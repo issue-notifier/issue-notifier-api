@@ -1,0 +1,368 @@
+basePath: /
+definitions:
+  models.Label:
+    properties:
+      color:
+        type: string
+      name:
+        type: string
+    type: object
+  models.Repository:
+    properties:
+      lastEventAt:
+        type: string
+      repoID:
+        type: string
+      repoName:
+        type: string
+    type: object
+  models.Subscription:
+    properties:
+      labels:
+        items:
+          $ref: '#/definitions/models.Label'
+        type: array
+      repoName:
+        type: string
+    type: object
+  models.UserIDLabel:
+    properties:
+      label:
+        type: string
+      userID:
+        type: string
+    type: object
+  routes.UserInfo:
+    properties:
+      accessToken:
+        type: string
+      avatarImg:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  routes.lastEventAt:
+    properties:
+      lastEventAt:
+        type: string
+    type: object
+host: localhost:8001
+info:
+  contact:
+    email: sachdev.hemakshi@gmail.com
+    name: Hemakshi Sachdev
+  description: APIs for the Github Issue Notifier Project. https://github.com/issue-notifier
+  termsOfService: http://swagger.io/terms/
+  title: Github Issue-Notifier API
+  version: "1.0"
+paths:
+  /api/v1/{repoID}/subscription/view:
+    get:
+      description: Get all subscriptions for the given `repoID`
+      parameters:
+      - description: Repository ID for which subscription data needs to be fetched
+        in: path
+        name: repoID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserIDLabel'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all subscriptions for the given `repoID`
+      tags:
+      - subscription
+  /api/v1/login/github/oauth2:
+    get:
+      description: Performs a Github OAuth by using the `code` provided in query param
+        and then uses the received accessToken to fetch user information from Github.
+        If it is a new user then user is also saved in the database. It also creates
+        a user session for future authenticated calls.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.UserInfo'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Login via Github OAuth
+      tags:
+      - user
+  /api/v1/repositories:
+    get:
+      description: Get complete repository information for all repositories from the
+        database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Repository'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all repositories
+      tags:
+      - repository
+  /api/v1/repository/{repoID}/update/lastEventAt:
+    put:
+      description: Updates `lastEventAt` time for the given `repoID` in the database
+      parameters:
+      - description: Repository ID for which `lastEventAt` needs to be updated
+        in: path
+        name: repoID
+        required: true
+        type: string
+      - description: '`lastEventAt` time (with timezone) at which last event for the
+          repository occurred. Format `lastEventAt`: `2006-01-02 15:04:05-07:00`'
+        in: body
+        name: lastEventAt
+        required: true
+        schema:
+          $ref: '#/definitions/routes.lastEventAt'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Updates `lastEventAt` time for the given `repoID`
+      tags:
+      - repository
+  /api/v1/user/{repoName}/subscription/labels:
+    get:
+      description: Get all subscriptions for the given `userID` and `repoName` of
+        the authenticated user
+      parameters:
+      - description: Repository Name for which subscription data needs to be fetched.
+          Format `facebook/react`
+        in: path
+        name: repoName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.Label'
+              type: array
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Get all subscriptions for the given `userID` and `repoName` of the
+        authenticated user
+      tags:
+      - subscription
+  /api/v1/user/authenticated:
+    get:
+      description: Get user information from Github for authenticated user via session
+        token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.UserInfo'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Get user information from Github for authenticated user
+      tags:
+      - user
+  /api/v1/user/logout:
+    get:
+      description: Performs the logout function by deleting user session
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Logout from user session
+      tags:
+      - user
+  /api/v1/user/subscription/add:
+    post:
+      description: Create new subscription for the authenticated user
+      parameters:
+      - description: Repository Name and list of Labels to create a new subscription
+        in: body
+        name: subscriptions
+        required: true
+        schema:
+          $ref: '#/definitions/models.Subscription'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Create new subscription for the authenticated user
+      tags:
+      - subscription
+  /api/v1/user/subscription/remove:
+    delete:
+      description: Deletes existing subscription for the authenticated user
+      parameters:
+      - description: Repository Name and list of Labels which needs to be deleted
+          from the existing subscription
+        in: body
+        name: subscriptions
+        required: true
+        schema:
+          $ref: '#/definitions/models.Subscription'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Deletes existing subscription for the authenticated user
+      tags:
+      - subscription
+  /api/v1/user/subscription/update:
+    put:
+      description: Update existing subscription for the authenticated user
+      parameters:
+      - description: Repository Name and list of Labels which needs to be added to
+          the existing subscription
+        in: body
+        name: subscriptions
+        required: true
+        schema:
+          $ref: '#/definitions/models.Subscription'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Update existing subscription for the authenticated user
+      tags:
+      - subscription
+  /api/v1/user/subscription/view:
+    get:
+      description: Get all subscriptions for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Subscription'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - Github OAuth: []
+      summary: Get all subscriptions for the authenticated user
+      tags:
+      - subscription
+swagger: "2.0"

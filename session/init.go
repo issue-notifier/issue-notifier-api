@@ -13,7 +13,7 @@ var (
 	CookieName string = "cookie-name"
 )
 
-// UserSession data type
+// UserSession struct to store user session details
 type UserSession struct {
 	UserID          string `json:"userID"`
 	AccessToken     string `json:"accessToken"`

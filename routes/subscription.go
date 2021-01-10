@@ -12,39 +12,67 @@ import (
 	"github.com/lib/pq"
 )
 
-type Subscription struct {
-	RepoName string        `json:"repoName"`
-	Labels   models.Labels `json:"labels"`
-}
-
+// GetSubscriptionsByUserID godoc
+// @Summary Get all subscriptions for the authenticated user
+// @Description Get all subscriptions for the authenticated user
+// @Tags subscription
+// @Security Github OAuth
+// @Produce json
+// @Success 200 {array} models.Subscription
+// @Failure 401 {string} Unauthorized
+// @Failure 500 {string} Internal Server Error
+// @Router /api/v1/user/subscription/view [get]
 func GetSubscriptionsByUserID(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(w, r)
 
 	subscriptions, err := models.GetSubscriptionsByUserID(userID)
 	// If no repository found with the given name return an empty response
-	if err == sql.ErrNoRows {
-		utils.RespondWithJSON(w, http.StatusOK, subscriptions)
-		return
-	}
-
-	utils.RespondWithJSON(w, http.StatusOK, subscriptions)
-}
-
-func GetSubscriptionsByRepoID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	repoID := vars["repoID"]
-
-	var data []map[string]interface{}
-
-	data, err := models.GetSubscriptionsByRepoID(repoID)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
+		utils.LogError.Println("Failed to fetch subscriptions for userID:", userID)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	utils.LogInfo.Println("Returning", len(subscriptions), "subscription for userID:", userID)
+	utils.RespondWithJSON(w, http.StatusOK, subscriptions)
+}
+
+// GetSubscriptionsByRepoID godoc
+// @Summary Get all subscriptions for the given `repoID`
+// @Description Get all subscriptions for the given `repoID`
+// @Tags subscription
+// @Produce json
+// @Param repoID path string true "Repository ID for which subscription data needs to be fetched"
+// @Success 200 {array} models.UserIDLabel
+// @Failure 500 {string} Internal Server Error
+// @Router /api/v1/{repoID}/subscription/view [get]
+func GetSubscriptionsByRepoID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	repoID := vars["repoID"]
+
+	var data []models.UserIDLabel
+	data, err := models.GetSubscriptionsByRepoID(repoID)
+	if err != nil {
+		utils.LogError.Println("Failed to subscriptions for repoID:", repoID, ". Error:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.LogInfo.Println("Returning", len(data), "subscription for repoID:", repoID)
 	utils.RespondWithJSON(w, http.StatusOK, data)
 }
 
+// GetSubscribedLabelsByUserIDAndRepoName godoc
+// @Summary Get all subscriptions for the given `userID` and `repoName` of the authenticated user
+// @Description Get all subscriptions for the given `userID` and `repoName` of the authenticated user
+// @Tags subscription
+// @Produce json
+// @Security Github OAuth
+// @Param repoName path string true "Repository Name for which subscription data needs to be fetched. Format `facebook/react`"
+// @Success 200 {array} models.Labels
+// @Failure 401 {string} Unauthorized
+// @Failure 500 {string} Internal Server Error
+// @Router /api/v1/user/{repoName}/subscription/labels [get]
 func GetSubscribedLabelsByUserIDAndRepoName(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(w, r)
 
@@ -70,9 +98,22 @@ func GetSubscribedLabelsByUserIDAndRepoName(w http.ResponseWriter, r *http.Reque
 	utils.RespondWithJSON(w, http.StatusOK, labels)
 }
 
+// CreateSubscriptions godoc
+// @Summary Create new subscription for the authenticated user
+// @Description Create new subscription for the authenticated user
+// @Tags subscription
+// @Produce json
+// @Security Github OAuth
+// @Param subscriptions body models.Subscription true "Repository Name and list of Labels to create a new subscription"
+// @Success 201 {string} Create Success
+// @Failure 400 {string} Bad Request
+// @Failure 401 {string} Unauthorized
+// @Failure 500 {string} Internal Server Error
+// @Router /api/v1/user/subscription/add [post]
 func CreateSubscriptions(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(w, r)
-	var subscription Subscription
+
+	var subscription models.Subscription
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&subscription); err != nil {
@@ -104,13 +145,25 @@ func CreateSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, "Create Success")
+	utils.RespondWithJSON(w, http.StatusCreated, "Create Success")
 }
 
+// UpdateSubscriptions godoc
+// @Summary Update existing subscription for the authenticated user
+// @Description Update existing subscription for the authenticated user
+// @Tags subscription
+// @Produce json
+// @Security Github OAuth
+// @Param subscriptions body models.Subscription true "Repository Name and list of Labels which needs to be added to the existing subscription"
+// @Success 204 {string} Update Success
+// @Failure 400 {string} Bad Request
+// @Failure 401 {string} Unauthorized
+// @Failure 500 {string} Internal Server Error
+// @Router /api/v1/user/subscription/update [put]
 func UpdateSubscriptions(w http.ResponseWriter, r *http.Request) {
-
 	userID := getUserIDFromSession(w, r)
-	var subscription Subscription
+
+	var subscription models.Subscription
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&subscription); err != nil {
@@ -126,7 +179,6 @@ func UpdateSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	existingLabels, err := models.GetSubscribedLabelsByUserIDAndRepoID(userID, repoID)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -157,14 +209,26 @@ func UpdateSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, "Update Success")
+	utils.RespondWithJSON(w, http.StatusNoContent, "Update Success")
 
 }
 
+// RemoveSubscriptions godoc
+// @Summary Deletes existing subscription for the authenticated user
+// @Description Deletes existing subscription for the authenticated user
+// @Tags subscription
+// @Produce json
+// @Security Github OAuth
+// @Param subscriptions body models.Subscription true "Repository Name and list of Labels which needs to be deleted from the existing subscription"
+// @Success 204 {string} Remove Success
+// @Failure 400 {string} Bad Request
+// @Failure 401 {string} Unauthorized
+// @Failure 500 {string} Internal Server Error
+// @Router /api/v1/user/subscription/remove [delete]
 func RemoveSubscriptions(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromSession(w, r)
 
-	var subscription Subscription
+	var subscription models.Subscription
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&subscription); err != nil {
@@ -174,7 +238,6 @@ func RemoveSubscriptions(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	repoID, err := models.GetRepositoryIDByName(subscription.RepoName)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -192,12 +255,11 @@ func RemoveSubscriptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, "Remove Success")
+	utils.RespondWithJSON(w, http.StatusNoContent, "Remove Success")
 }
 
 func getUserIDFromSession(w http.ResponseWriter, r *http.Request) (userID string) {
 	ses, err := session.Store.Get(r, session.CookieName)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -1,50 +1,61 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/issue-notifier/issue-notifier-api/database"
 	"github.com/issue-notifier/issue-notifier-api/routes"
 	"github.com/issue-notifier/issue-notifier-api/session"
+	"github.com/issue-notifier/issue-notifier-api/utils"
 	"github.com/joho/godotenv"
+
+	_ "github.com/issue-notifier/issue-notifier-api/docs" // Generate Swagger Doc for APIs. Used
 )
 
 // Env vars
 var (
-	PORT string
+	port string
 
-	DB_USER string
-	DB_PASS string
-	DB_NAME string
+	dbUser string
+	dbPass string
+	dbName string
 
-	SESSION_AUTH_KEY string
+	sessionAuthKey string
 
-	GITHUB_CLIENT_ID     string
-	GITHUB_CLIENT_SECRET string
+	githubClientID     string
+	githubClientSecret string
 )
 
+// @title Github Issue-Notifier API
+// @version 1.0
+// @description APIs for the Github Issue Notifier Project. https://github.com/issue-notifier
+// @termsOfService http://swagger.io/terms/
+// @contact.name Hemakshi Sachdev
+// @contact.email sachdev.hemakshi@gmail.com
+// @host localhost:8001
+// @BasePath /
 func main() {
+	utils.InitLogging()
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		utils.LogError.Fatalln("Error loading .env file. Error:", err)
 	}
 
-	PORT = os.Getenv("PORT")
-	DB_USER = os.Getenv("DB_USER")
-	DB_PASS = os.Getenv("DB_PASS")
-	DB_NAME = os.Getenv("DB_NAME")
-	SESSION_AUTH_KEY = os.Getenv("SESSION_AUTH_KEY")
-	GITHUB_CLIENT_ID = os.Getenv("GITHUB_CLIENT_ID")
-	GITHUB_CLIENT_SECRET = os.Getenv("GITHUB_CLIENT_SECRET")
+	port = os.Getenv("PORT")
+	dbUser = os.Getenv("DB_USER")
+	dbPass = os.Getenv("DB_PASS")
+	dbName = os.Getenv("DB_NAME")
+	sessionAuthKey = os.Getenv("SESSION_AUTH_KEY")
+	githubClientID = os.Getenv("GITHUB_CLIENT_ID")
+	githubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
 
-	database.Init(DB_USER, DB_PASS, DB_NAME)
+	database.Init(dbUser, dbPass, dbName)
 	defer database.DB.Close()
 
-	routes.Init(GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
+	routes.Init(githubClientID, githubClientSecret)
 
-	session.Init(SESSION_AUTH_KEY)
+	session.Init(sessionAuthKey)
 
-	log.Fatal(http.ListenAndServe(PORT, routes.Router))
+	utils.LogError.Fatal(http.ListenAndServe(port, routes.Router))
 }
