@@ -35,6 +35,9 @@ func Init(githubClientID, githubClientSecret string) {
 	authRouter = noAuthRouter.PathPrefix("/user").Subrouter()
 	authRouter.Use(middleware.IsAuthenticated)
 
+	spa := SPAHandler{staticPath: "build", indexPath: "index.html"}
+	Router.PathPrefix("/").Handler(spa)
+
 	// matches /health
 	Router.HandleFunc("/health", health).Methods("GET")
 

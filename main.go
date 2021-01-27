@@ -1,25 +1,29 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 
 	"github.com/issue-notifier/issue-notifier-api/database"
 	"github.com/issue-notifier/issue-notifier-api/routes"
 	"github.com/issue-notifier/issue-notifier-api/session"
 	"github.com/issue-notifier/issue-notifier-api/utils"
-	"github.com/joho/godotenv"
 
 	_ "github.com/issue-notifier/issue-notifier-api/docs" // Generate Swagger Doc for APIs. Used
 )
 
 // Env vars
 var (
-	port string
+	environment string
+	port        string
 
 	dbUser string
 	dbPass string
 	dbName string
+	dbURL  string
 
 	sessionAuthKey string
 
@@ -36,26 +40,33 @@ var (
 // @host localhost:8001
 // @BasePath /
 func main() {
-	utils.InitLogging()
 	err := godotenv.Load()
 	if err != nil {
-		utils.LogError.Fatalln("Error loading .env file. Error:", err)
+		log.Println("Error loading .env file. Error:", err, "This is okay if the app is running on Production")
 	}
 
+	environment = os.Getenv("ENVIRONMENT")
 	port = os.Getenv("PORT")
 	dbUser = os.Getenv("DB_USER")
 	dbPass = os.Getenv("DB_PASS")
 	dbName = os.Getenv("DB_NAME")
+	if environment == "production" {
+		dbURL = os.Getenv("DATABASE_URL")
+	} else {
+		dbURL = ""
+	}
 	sessionAuthKey = os.Getenv("SESSION_AUTH_KEY")
 	githubClientID = os.Getenv("GITHUB_CLIENT_ID")
 	githubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
 
-	database.Init(dbUser, dbPass, dbName)
+	utils.InitLogging(environment)
+
+	database.Init(environment, dbUser, dbPass, dbName, dbURL)
 	defer database.DB.Close()
 
 	routes.Init(githubClientID, githubClientSecret)
 
 	session.Init(sessionAuthKey)
 
-	utils.LogError.Fatal(http.ListenAndServe(port, routes.Router))
+	utils.LogError.Fatal(http.ListenAndServe(":"+port, routes.Router))
 }

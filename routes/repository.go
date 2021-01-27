@@ -26,7 +26,7 @@ func GetAllRepositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.LogInfo.Println("Returning", len(repositories), "from the database")
+	utils.LogInfo.Println("Returning", len(repositories), "repositories from the database")
 	utils.RespondWithJSON(w, http.StatusOK, repositories)
 }
 

@@ -26,8 +26,6 @@ type HTTPLogInfo struct {
 	UserAgent     string
 }
 
-// Layout1  string = "2006-01-02T15:04:05-07:00"
-
 var layout = "Mon, 02 Jan 2006 15:04:05 MST"
 
 // LogHTTPRequest is a logging middleware which logs request and response information like method, protocol, URI, etc.

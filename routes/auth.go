@@ -102,7 +102,7 @@ func GitHubLogin(w http.ResponseWriter, r *http.Request) {
 		utils.LogInfo.Println("Successfully created new user with userID:", userID)
 
 	} else if err != nil {
-		utils.LogError.Println("Failed to get username for userID:", userID)
+		utils.LogError.Println("Failed to get username for userID:", userID, ". Error:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

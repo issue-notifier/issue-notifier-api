@@ -28,7 +28,7 @@ func GetUserIDByUsername(username string) (string, error) {
 		return "", fmt.Errorf("[GetUserIDByUsername]: %v", err)
 	}
 
-	return userID.String(), nil
+	return userID.String(), err
 }
 
 // CreateUser creates a new `User` in the database and returns the `userID` of the newly created `User`
