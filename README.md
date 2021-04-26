@@ -26,6 +26,7 @@ Swagger Page - http://localhost:8001/api/v1/swagger/index.html
 Use the Authorization callback URL, Client ID and Client Secret below for creating secrets and configmap
 
 Run the following commands from root of the project
+
 4. `$ eval $(minikube docker-env)`
 5. `$ docker build -t hemakshis/issue-notifier-api .` (also make sure to build hemakshi/issue-notifier image after this, details here - [issue-notifier/issue-notifier](https://github.com/issue-notifier/issue-notifier))
 6. `$ cd deploy/development`
