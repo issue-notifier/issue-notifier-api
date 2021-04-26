@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: issue-notifier
+  name: postgres
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: issue-notifier
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: issue-notifier
+        tier: database
+    spec:
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres
+      containers:
+        - name: postgres
+          image: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: dbPass
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: issue-notifier
+  name: postgres
+spec:
+  type: ClusterIP
+  selector:
+    tier: database
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: issue-notifier
+  name: postgres
+  labels:
+    app: issue-notifier
+    tier: database
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: /var/lib/minikube/issue-notifier/postgres
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: issue-notifier
+  name: postgres
+  labels:
+    app: issue-notifier
+    tier: database
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi

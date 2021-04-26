@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: issue-notifier
+  name: issue-notifier
+  labels:
+    tier: ui
+    app: issue-notifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: ui
+  template:
+    metadata:
+      labels:
+        tier: ui
+        app: issue-notifier
+    spec:
+      containers:
+        - name: issue-notifier
+          image: hemakshis/issue-notifier:latest
+          imagePullPolicy: Never
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: config
+              mountPath: "/usr/share/nginx/html/config.js"
+              subPath: "config.js"
+      volumes:
+        - name: config
+          configMap:
+            name: config-map
+            items:
+              - key: "issue-notifier.config"
+                path: "config.js"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: issue-notifier
+  name: issue-notifier
+  labels:
+    app: issue-notifier
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    tier: ui

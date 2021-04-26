@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: issue-notifier
+  name: issue-notifier-api
+  labels:
+    tier: api
+    app: issue-notifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: api
+  template:
+    metadata:
+      labels:
+        tier: api
+        app: issue-notifier
+    spec:
+      containers:
+        - name: issue-notifier-api
+          image: hemakshis/issue-notifier-api:latest
+          imagePullPolicy: Never
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 8001
+          env:
+            - name: PORT
+              value: "8001"
+            - name: ENVIRONMENT
+              value: development
+            - name: DB_HOST
+              value: postgres
+            - name: DB_USER
+              value: postgres
+            - name: DB_NAME
+              value: issue_notifier
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: dbPass
+            - name: SESSION_AUTH_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: sessionAuthKey
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: githubClientID
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: githubClientSecret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: issue-notifier
+  name: issue-notifier-api
+  labels:
+    app: issue-notifier
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8001
+      targetPort: 8001
+  selector:
+    tier: api

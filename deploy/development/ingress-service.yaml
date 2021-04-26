@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: issue-notifier
+  name: ingress-service
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: issue-notifier
+                port: 
+                  number: 3000
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: issue-notifier-api
+                port: 
+                  number: 8001

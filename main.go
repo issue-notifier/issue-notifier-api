@@ -20,6 +20,7 @@ var (
 	environment string
 	port        string
 
+	dbHost string
 	dbUser string
 	dbPass string
 	dbName string
@@ -47,26 +48,29 @@ func main() {
 
 	environment = os.Getenv("ENVIRONMENT")
 	port = os.Getenv("PORT")
+	dbHost = os.Getenv("DB_HOST")
 	dbUser = os.Getenv("DB_USER")
 	dbPass = os.Getenv("DB_PASS")
 	dbName = os.Getenv("DB_NAME")
-	if environment == "production" {
-		dbURL = os.Getenv("DATABASE_URL")
-	} else {
-		dbURL = ""
-	}
 	sessionAuthKey = os.Getenv("SESSION_AUTH_KEY")
 	githubClientID = os.Getenv("GITHUB_CLIENT_ID")
 	githubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
 
 	utils.InitLogging(environment)
 
-	database.Init(environment, dbUser, dbPass, dbName, dbURL)
+	if environment == "production" {
+		dbURL = os.Getenv("DATABASE_URL")
+		database.Init(environment, dbURL)
+	} else {
+		dbURL = ""
+		database.Init(environment, dbHost, dbUser, dbPass, dbName)
+	}
 	defer database.DB.Close()
 
 	routes.Init(githubClientID, githubClientSecret)
 
 	session.Init(sessionAuthKey)
 
+	utils.LogInfo.Println("Starting Go server on port:", port)
 	utils.LogError.Fatal(http.ListenAndServe(":"+port, routes.Router))
 }

@@ -14,12 +14,12 @@ import (
 var DB *sql.DB
 
 // Init initializes postgres database
-func Init(environment, dbUser, dbPass, dbName, dbURL string) {
+func Init(environment string, dbConfigs ...string) {
 	var err error
 	if environment == "production" {
-		DB, err = sql.Open("postgres", dbURL)
+		DB, err = sql.Open("postgres", dbConfigs[0])
 	} else {
-		connectionString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", dbUser, dbPass, dbName)
+		connectionString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", dbConfigs[0], dbConfigs[1], dbConfigs[2], dbConfigs[3])
 		DB, err = sql.Open("postgres", connectionString)
 	}
 

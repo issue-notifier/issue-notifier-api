@@ -1,0 +1,53 @@
+1. Create database
+CREATE DATABASE issue_notifier;
+
+2. Connect to the database
+\connect issue_notifer
+
+3. Initialize UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+4. Create neccessary tables
+create table github_user(
+    user_id uuid primary key default uuid_generate_v4(),
+    username varchar(40),
+    email varchar(50)
+);
+
+create table global_repository(
+    repo_id uuid primary key default uuid_generate_v4(),
+    repo_name varchar(255),
+    last_event_at timestamptz default timestamp 'epoch'
+);
+
+create table user_subscription(
+    sub_id uuid primary key default uuid_generate_v4(),
+    user_id uuid,
+    repo_id uuid,
+    labels jsonb not null,
+    last_notification_time timestamptz,
+    unique (user_id, repo_id),
+    CONSTRAINT fk_user_id
+      FOREIGN KEY(user_id) 
+	  REFERENCES github_user(user_id),
+    CONSTRAINT fk_repo_id
+      FOREIGN KEY(repo_id) 
+	  REFERENCES global_repository(repo_id)
+);
+
+create table notification_data (
+    notifd_id uuid primary key default uuid_generate_v4(),
+    user_id uuid,
+    repo_id uuid,
+    issue_number integer,
+    issue_data jsonb not NULL,
+    sent boolean default 'false',
+    unique (user_id, repo_id, issue_number),
+    CONSTRAINT fk_user_id
+      FOREIGN KEY(user_id) 
+	    REFERENCES github_user(user_id),
+    CONSTRAINT fk_repo_id
+      FOREIGN KEY(repo_id) 
+	    REFERENCES global_repository(repo_id)
+        ON DELETE CASCADE
+);

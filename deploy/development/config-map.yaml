@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: issue-notifier
+  name: config-map
+data:
+  issue-notifier.config: | # Change them for your local system
+    window.ISSUE_NOTIFIER_API_ENDPOINT = "http://192.168.49.2"
+    window.CLIENT_ID = "69c3fc731ccb2d116412"

@@ -23,6 +23,10 @@ func InitLogging(environment string) {
 		LogError = log.New(os.Stderr, "\tERROR:\t", log.LstdFlags|log.LUTC|log.Lshortfile|log.Lmsgprefix)
 		LogHTTP = log.New(os.Stdout, "", log.LstdFlags|log.LUTC|log.Lmsgprefix)
 	} else {
+		if _, err := os.Stat("./logs"); os.IsNotExist(err) {
+			os.Mkdir("./logs", 0777)
+		}
+
 		logFilePath, err := filepath.Abs("./logs")
 		if err != nil {
 			log.Println("Error getting logs folder path. Error:", err)

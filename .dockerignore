@@ -1,0 +1,9 @@
+build/
+deploy/
+logs/
+
+LICENSE
+README.md
+notes.txt
+issue-notifier-api
+.env
