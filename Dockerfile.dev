@@ -1,0 +1,12 @@
+FROM golang:alpine3.13
+
+WORKDIR /app
+
+COPY . .
+
+RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o main .
+ENV GOTRACEBACK=single
+
+CMD ["/app/main"]
+
+EXPOSE 8001

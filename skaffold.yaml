@@ -1,0 +1,22 @@
+apiVersion: skaffold/v2beta11
+kind: Config
+metadata:
+  name: issue-notifier-api
+build:
+  local:
+    push: false
+  artifacts:
+    - image: hemakshis/issue-notifier-api
+      context: .
+      docker:
+        dockerfile: Dockerfile.dev
+deploy:
+  kubectl:
+    manifests:
+      - deploy/development/issue-notifier-api.yaml
+    defaultNamespace: issue-notifier
+portForward:
+- resourceType: deployment
+  resourceName: issue-notifier-api
+  port: 8001
+  namespace: issue-notifier

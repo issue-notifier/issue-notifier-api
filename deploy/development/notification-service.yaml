@@ -1,0 +1,45 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  namespace: issue-notifier
+  name: notification-service
+spec:
+  schedule: "0 */6 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: notification-service
+            image: hemakshis/notification-service:latest
+            imagePullPolicy: Never
+            command: ["/app/main"]
+            env:
+            - name: TIME_GAP
+              value: "10"
+            - name: ENVIRONMENT
+              value: development
+            - name: DB_HOST
+              value: postgres
+            - name: DB_USER
+              value: postgres
+            - name: DB_NAME
+              value: issue_notifier
+            - name: ISSUE_NOTIFIER_API_ENDPOINT
+              value: http://$(ISSUE_NOTIFIER_API_SERVICE_HOST):$(ISSUE_NOTIFIER_API_SERVICE_PORT)
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: dbPass
+            - name: GMAIL_ID
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: gmailID
+            - name: GMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: gmailPass
+          restartPolicy: OnFailure
